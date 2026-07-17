@@ -34,7 +34,7 @@ Add the library to your project's `frothy.toml`, pinned to a commit:
 
 ```toml
 [deps]
-frothy-stepper-gpl = { git = "https://github.com/nikokozak/frothy-stepper-gpl", rev = "<commit-sha>" }
+frothy-stepper = { git = "https://github.com/nikokozak/frothy-stepper", rev = "<commit-sha>" }
 ```
 
 Build the project, then flash the resulting firmware. Replace the board and

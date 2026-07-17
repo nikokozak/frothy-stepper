@@ -1,5 +1,5 @@
 /*
- * frothy-stepper-gpl 0.1.0
+ * frothy-stepper 0.1.0
  *
  * Copyright (C) 2009-2025 Mike McCauley
  * Copyright (C) 2026 Niko Kozak
@@ -29,7 +29,7 @@
 #include <stdint.h>
 
 #if !FR_FEATURE_CELLS
-#error "frothy-stepper-gpl requires cells"
+#error "frothy-stepper requires cells"
 #endif
 
 typedef char fr_stepper_requires_32_bit_tagged_words

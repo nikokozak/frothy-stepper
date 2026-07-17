@@ -1,5 +1,5 @@
-name = "frothy-stepper-gpl-test"
+name = "frothy-stepper-test"
 board = "host"
 
 [deps]
-frothy-stepper-gpl = { path = ".." }
+frothy-stepper = { path = ".." }

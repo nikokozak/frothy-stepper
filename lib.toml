@@ -1,4 +1,4 @@
-name = "frothy-stepper-gpl"
+name = "frothy-stepper"
 version = "0.1.0"
 boards = ["host", "esp32_devkit_v1", "seeed_xiao_esp32s3"]
 

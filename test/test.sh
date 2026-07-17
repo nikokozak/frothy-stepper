@@ -245,4 +245,4 @@ if ! printf '%s\n' "$uninitialized_output" | grep -q '^> error:'; then
   exit 1
 fi
 
-printf 'frothy-stepper-gpl tests ok\n'
+printf 'frothy-stepper tests ok\n'
