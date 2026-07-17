@@ -18,6 +18,11 @@ make -C "$FROTHY_SOURCE_ROOT" frothy-host-command >/dev/null
 PROFILE=host_normal BUILD_DIR="$build_dir" \
   "$frothy" build --project "$project" >/dev/null
 binary="$build_dir/frothy.elf"
+generated="$project/.frothy/build/host"
+
+grep -Fq 'native/stepper.c' "$generated/libs.cmake"
+grep -Fq '"stepper.running?", fr_lib_stepper_running, 1' \
+  "$generated/lib_natives.c"
 
 numbers() {
   awk '/^> -?[0-9]+$/ { sub(/^> /, ""); print }'
