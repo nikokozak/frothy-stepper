@@ -1,0 +1,5 @@
+name = "frothy-stepper-gpl-test"
+board = "host"
+
+[deps]
+frothy-stepper-gpl = { path = ".." }
