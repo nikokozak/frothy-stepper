@@ -53,6 +53,10 @@ to boot [
 ]
 ```
 
+`stepper.init` starts with deliberately conservative defaults of 1 step/s and
+1 step/s². Set both the maximum speed and acceleration before starting an
+accelerated move, as in the example above.
+
 For constant speed, call `stepper.set-speed` and service
 `stepper.run-speed`. A negative speed reverses direction; zero stops pulses.
 
@@ -90,8 +94,10 @@ forever [
 | `stepper.speed` | motor | int | Read signed current speed. |
 | `stepper.running?` | motor | bool | Report motion or a remaining destination. |
 
-Invalid configuration, a value other than `cells(16)`, and an uninitialized or
-corrupted motor produce a Frothy error before a step is emitted.
+A value other than `cells(16)`, invalid configuration, and detected malformed
+or uninitialized state produce a Frothy error before a step is emitted. The
+sentinel and range checks catch common damage; they are not an integrity check
+for every possible cell mutation.
 
 ## State and limits
 
@@ -106,14 +112,22 @@ object pointer, hidden allocation, handle, cache, or mutable C state.
 | 3 | maximum speed | 11 | direction, -1 or 1 |
 | 4 | acceleration | 12 | step pin |
 | 5 | step interval in µs | 13 | direction pin |
-| 6 | wrapped last-step time | 14 | reserved, zero in 0.1 |
+| 6 | wrapped last-step time | 14 | signed speed × 1000 |
 | 7 | acceleration recurrence step | 15 | initialization sentinel |
 
 Settings are integers. Maximum configured speed is 46,340 steps/s and
 acceleration is 1–100,000 steps/s². The recurrence uses 64-bit intermediates
-and stores deterministic fixed-point values back into tagged cells. Fixed-point
-rounding, polling frequency, GPIO cost, and the motor itself can all make the
-physically useful ceiling lower than the accepted numeric ceiling.
+and stores deterministic fixed-point values back into tagged cells. Cell 14
+preserves fractional speed for stopping-distance decisions; `stepper.speed`
+returns its integer projection. Pulse intervals round upward to a whole
+microsecond, a conservative difference from AccelStepper's floating-point
+interval truncation. Fixed-point rounding, polling frequency, GPIO cost, and
+the motor itself can all make the physically useful ceiling lower than the
+accepted numeric ceiling.
+
+Positions use Frothy's signed 30-bit integer range. Relative moves,
+target-distance calculations, and free-running steps return a range error at
+that boundary instead of wrapping.
 
 Each pulse has 2 µs of direction setup and at least 2 µs high time. That timing
 is enforced by Frothy's platform layer, but the first release is not yet
@@ -130,6 +144,17 @@ separate future capability.
   a GPIO pin.
 
 Follow the controller's current-limit, decoupling, and power-sequencing rules.
+
+## Test the extension path
+
+The repository test builds a real Frothy project with the path dependency,
+generates the native table, compiles this C source into the runtime, and checks
+motion, reversal, numeric limits, wrapped microsecond timing, and invalid
+state:
+
+```sh
+FROTHY_SOURCE_ROOT=/path/to/FrothyRewrite ./test/test.sh
+```
 
 ## Origin and license
 

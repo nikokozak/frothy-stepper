@@ -9,6 +9,7 @@
  * arithmetic, and Frothy's checked platform functions. Coil sequencing,
  * MultiStepper, blocking calls, callbacks, enable pins, pin inversion, and
  * configurable pulse width are omitted.
+ * Frothy modifications were first made on 2026-07-16.
  *
  * Upstream: https://www.airspayce.com/mikem/arduino/AccelStepper/
  * SPDX-License-Identifier: GPL-3.0-only
@@ -49,7 +50,7 @@ enum {
   FR_STEPPER_DIRECTION = 11,
   FR_STEPPER_STEP_PIN = 12,
   FR_STEPPER_DIRECTION_PIN = 13,
-  FR_STEPPER_RESERVED = 14,
+  FR_STEPPER_SPEED_MILLI = 14,
   FR_STEPPER_SENTINEL = 15,
   FR_STEPPER_CELL_COUNT = 16,
 
@@ -133,6 +134,14 @@ static fr_err_t fr_stepper_load(fr_runtime_t *runtime, fr_tagged_t tagged,
       out_motor->cells[FR_STEPPER_DIRECTION_PIN] > UINT16_MAX ||
       out_motor->cells[FR_STEPPER_STEP_PIN] ==
           out_motor->cells[FR_STEPPER_DIRECTION_PIN]) {
+    return FR_ERR_DOMAIN;
+  }
+  if ((int64_t)out_motor->cells[FR_STEPPER_SPEED_MILLI] <
+          -INT64_C(1000) * FR_STEPPER_MAX_CONFIGURED_SPEED ||
+      (int64_t)out_motor->cells[FR_STEPPER_SPEED_MILLI] >
+          INT64_C(1000) * FR_STEPPER_MAX_CONFIGURED_SPEED ||
+      out_motor->cells[FR_STEPPER_SPEED] !=
+          out_motor->cells[FR_STEPPER_SPEED_MILLI] / 1000) {
     return FR_ERR_DOMAIN;
   }
   return FR_OK;
@@ -219,9 +228,10 @@ static int64_t fr_stepper_distance(const fr_stepper_motor_t *motor) {
 }
 
 static int64_t fr_stepper_steps_to_stop(const fr_stepper_motor_t *motor) {
-  int64_t speed = motor->cells[FR_STEPPER_SPEED];
+  int64_t speed_milli = motor->cells[FR_STEPPER_SPEED_MILLI];
 
-  return speed * speed / (2 * (int64_t)motor->cells[FR_STEPPER_ACCELERATION]);
+  return speed_milli * speed_milli /
+         (INT64_C(2000000) * motor->cells[FR_STEPPER_ACCELERATION]);
 }
 
 static fr_err_t fr_stepper_compute_speed(fr_stepper_motor_t *motor) {
@@ -232,7 +242,7 @@ static fr_err_t fr_stepper_compute_speed(fr_stepper_motor_t *motor) {
   int64_t denominator = 0;
   int64_t correction = 0;
   int64_t interval = 0;
-  int64_t speed = 0;
+  int64_t speed_milli = 0;
 
   if (distance < FR_TAGGED_INT_MIN || distance > FR_TAGGED_INT_MAX) {
     return FR_ERR_RANGE;
@@ -240,6 +250,7 @@ static fr_err_t fr_stepper_compute_speed(fr_stepper_motor_t *motor) {
   if (distance == 0 && steps_to_stop <= 1) {
     motor->cells[FR_STEPPER_STEP_INTERVAL] = 0;
     motor->cells[FR_STEPPER_SPEED] = 0;
+    motor->cells[FR_STEPPER_SPEED_MILLI] = 0;
     motor->cells[FR_STEPPER_N] = 0;
     return FR_OK;
   }
@@ -279,17 +290,20 @@ static fr_err_t fr_stepper_compute_speed(fr_stepper_motor_t *motor) {
   FR_TRY(fr_stepper_i32(cn, &motor->cells[FR_STEPPER_CN]));
   interval = (cn + 999) / 1000;
   FR_TRY(fr_stepper_i32(interval, &motor->cells[FR_STEPPER_STEP_INTERVAL]));
-  speed = INT64_C(1000000000) / cn;
+  speed_milli = INT64_C(1000000000000) / cn;
   if (motor->cells[FR_STEPPER_DIRECTION] < 0) {
-    speed = -speed;
+    speed_milli = -speed_milli;
   }
-  return fr_stepper_i32(speed, &motor->cells[FR_STEPPER_SPEED]);
+  FR_TRY(fr_stepper_i32(speed_milli, &motor->cells[FR_STEPPER_SPEED_MILLI]));
+  return fr_stepper_i32(speed_milli / 1000, &motor->cells[FR_STEPPER_SPEED]);
 }
 
 static fr_err_t fr_stepper_store_speed(fr_runtime_t *runtime,
                                        const fr_stepper_motor_t *motor) {
   FR_TRY(fr_stepper_write(runtime, motor, FR_STEPPER_SPEED,
                           motor->cells[FR_STEPPER_SPEED]));
+  FR_TRY(fr_stepper_write(runtime, motor, FR_STEPPER_SPEED_MILLI,
+                          motor->cells[FR_STEPPER_SPEED_MILLI]));
   FR_TRY(fr_stepper_write(runtime, motor, FR_STEPPER_STEP_INTERVAL,
                           motor->cells[FR_STEPPER_STEP_INTERVAL]));
   FR_TRY(fr_stepper_write(runtime, motor, FR_STEPPER_N,
@@ -415,7 +429,7 @@ fr_err_t fr_lib_stepper_init(fr_runtime_t *runtime, const fr_tagged_t *args,
   motor.cells[FR_STEPPER_DIRECTION] = -1;
   motor.cells[FR_STEPPER_STEP_PIN] = step_pin;
   motor.cells[FR_STEPPER_DIRECTION_PIN] = direction_pin;
-  motor.cells[FR_STEPPER_RESERVED] = 0;
+  motor.cells[FR_STEPPER_SPEED_MILLI] = 0;
   motor.cells[FR_STEPPER_SENTINEL] = FR_STEPPER_READY;
 
   for (uint16_t i = 0; i < FR_STEPPER_CELL_COUNT; i++) {
@@ -511,6 +525,7 @@ fr_err_t fr_lib_stepper_set_speed(fr_runtime_t *runtime,
   fr_int_t speed = 0;
   int64_t magnitude = 0;
   int64_t interval = 0;
+  int64_t speed_milli = 0;
 
   FR_TRY(fr_stepper_check_call(runtime, args, arg_count, 2, out));
   FR_TRY(fr_stepper_load(runtime, args[0], &motor));
@@ -520,7 +535,9 @@ fr_err_t fr_lib_stepper_set_speed(fr_runtime_t *runtime,
   } else if (speed < -motor.cells[FR_STEPPER_MAX_SPEED]) {
     speed = -motor.cells[FR_STEPPER_MAX_SPEED];
   }
-  if (speed == motor.cells[FR_STEPPER_SPEED]) {
+  speed_milli = (int64_t)speed * 1000;
+  if (speed == motor.cells[FR_STEPPER_SPEED] &&
+      speed_milli == motor.cells[FR_STEPPER_SPEED_MILLI]) {
     *out = fr_tagged_nil();
     return FR_OK;
   }
@@ -534,7 +551,10 @@ fr_err_t fr_lib_stepper_set_speed(fr_runtime_t *runtime,
     motor.cells[FR_STEPPER_DIRECTION] = speed > 0 ? 1 : -1;
   }
   motor.cells[FR_STEPPER_SPEED] = speed;
+  motor.cells[FR_STEPPER_SPEED_MILLI] = (fr_int_t)speed_milli;
   FR_TRY(fr_stepper_write(runtime, &motor, FR_STEPPER_SPEED, speed));
+  FR_TRY(fr_stepper_write(runtime, &motor, FR_STEPPER_SPEED_MILLI,
+                          motor.cells[FR_STEPPER_SPEED_MILLI]));
   FR_TRY(fr_stepper_write(runtime, &motor, FR_STEPPER_STEP_INTERVAL,
                           motor.cells[FR_STEPPER_STEP_INTERVAL]));
   FR_TRY(fr_stepper_write(runtime, &motor, FR_STEPPER_DIRECTION,
@@ -597,8 +617,8 @@ fr_err_t fr_lib_stepper_run(fr_runtime_t *runtime, const fr_tagged_t *args,
     FR_TRY(fr_stepper_compute_speed(&motor));
     FR_TRY(fr_stepper_store_speed(runtime, &motor));
   }
-  running =
-      motor.cells[FR_STEPPER_SPEED] != 0 || fr_stepper_distance(&motor) != 0;
+  running = motor.cells[FR_STEPPER_SPEED_MILLI] != 0 ||
+            fr_stepper_distance(&motor) != 0;
   return fr_tagged_encode_bool(running, out);
 }
 
@@ -610,9 +630,9 @@ fr_err_t fr_lib_stepper_stop(fr_runtime_t *runtime, const fr_tagged_t *args,
 
   FR_TRY(fr_stepper_check_call(runtime, args, arg_count, 1, out));
   FR_TRY(fr_stepper_load(runtime, args[0], &motor));
-  if (motor.cells[FR_STEPPER_SPEED] != 0) {
+  if (motor.cells[FR_STEPPER_SPEED_MILLI] != 0) {
     distance = fr_stepper_steps_to_stop(&motor) + 1;
-    if (motor.cells[FR_STEPPER_SPEED] < 0) {
+    if (motor.cells[FR_STEPPER_SPEED_MILLI] < 0) {
       distance = -distance;
     }
     FR_TRY(fr_stepper_i32(
@@ -636,6 +656,7 @@ fr_err_t fr_lib_stepper_set_current_position(fr_runtime_t *runtime,
   motor.cells[FR_STEPPER_CURRENT_POSITION] = position;
   motor.cells[FR_STEPPER_TARGET_POSITION] = position;
   motor.cells[FR_STEPPER_SPEED] = 0;
+  motor.cells[FR_STEPPER_SPEED_MILLI] = 0;
   motor.cells[FR_STEPPER_STEP_INTERVAL] = 0;
   motor.cells[FR_STEPPER_N] = 0;
   FR_TRY(
@@ -695,7 +716,7 @@ fr_err_t fr_lib_stepper_running(fr_runtime_t *runtime, const fr_tagged_t *args,
 
   FR_TRY(fr_stepper_check_call(runtime, args, arg_count, 1, out));
   FR_TRY(fr_stepper_load(runtime, args[0], &motor));
-  running =
-      motor.cells[FR_STEPPER_SPEED] != 0 || fr_stepper_distance(&motor) != 0;
+  running = motor.cells[FR_STEPPER_SPEED_MILLI] != 0 ||
+            fr_stepper_distance(&motor) != 0;
   return fr_tagged_encode_bool(running, out);
 }
