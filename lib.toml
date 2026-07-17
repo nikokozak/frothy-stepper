@@ -1,0 +1,81 @@
+name = "frothy-stepper-gpl"
+version = "0.1.0"
+boards = ["host", "esp32_devkit_v1", "seeed_xiao_esp32s3"]
+
+[extension]
+sources = ["native/stepper.c"]
+
+[[natives]]
+name = "stepper.init"
+arity = 3
+c_function = "fr_lib_stepper_init"
+
+[[natives]]
+name = "stepper.set-max-speed"
+arity = 2
+c_function = "fr_lib_stepper_set_max_speed"
+
+[[natives]]
+name = "stepper.set-acceleration"
+arity = 2
+c_function = "fr_lib_stepper_set_acceleration"
+
+[[natives]]
+name = "stepper.set-speed"
+arity = 2
+c_function = "fr_lib_stepper_set_speed"
+
+[[natives]]
+name = "stepper.move-to"
+arity = 2
+c_function = "fr_lib_stepper_move_to"
+
+[[natives]]
+name = "stepper.move"
+arity = 2
+c_function = "fr_lib_stepper_move"
+
+[[natives]]
+name = "stepper.run-speed"
+arity = 1
+c_function = "fr_lib_stepper_run_speed"
+
+[[natives]]
+name = "stepper.run"
+arity = 1
+c_function = "fr_lib_stepper_run"
+
+[[natives]]
+name = "stepper.stop"
+arity = 1
+c_function = "fr_lib_stepper_stop"
+
+[[natives]]
+name = "stepper.set-current-position"
+arity = 2
+c_function = "fr_lib_stepper_set_current_position"
+
+[[natives]]
+name = "stepper.current-position"
+arity = 1
+c_function = "fr_lib_stepper_current_position"
+
+[[natives]]
+name = "stepper.target-position"
+arity = 1
+c_function = "fr_lib_stepper_target_position"
+
+[[natives]]
+name = "stepper.distance-to-go"
+arity = 1
+c_function = "fr_lib_stepper_distance_to_go"
+
+[[natives]]
+name = "stepper.speed"
+arity = 1
+c_function = "fr_lib_stepper_speed"
+
+[[natives]]
+name = "stepper.running?"
+arity = 1
+c_function = "fr_lib_stepper_running"

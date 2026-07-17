@@ -1,0 +1,5 @@
+-- frothy-stepper-gpl is implemented by the C extension declared in lib.toml.
+--
+-- Motor state remains ordinary caller-owned cells(16). The extension retains
+-- no object references or per-motor C state between calls.
+-- SPDX-License-Identifier: GPL-3.0-only
