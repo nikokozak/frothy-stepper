@@ -1,6 +1,9 @@
 name = "frothy-stepper"
-version = "0.1.0"
+version = "0.1.1"
+label = "Stepper motors"
+description = "AccelStepper-style stepper motor control; motor state is caller-owned cells."
 boards = ["host", "esp32_devkit_v1", "seeed_xiao_esp32s3"]
+requires = ["cells"]
 
 [extension]
 sources = ["native/stepper.c"]
