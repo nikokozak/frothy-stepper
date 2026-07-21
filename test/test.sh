@@ -4,12 +4,13 @@ set -euo pipefail
 : "${FROTHY_SOURCE_ROOT:?set FROTHY_SOURCE_ROOT to a Frothy source checkout}"
 
 root=$(cd "$(dirname "$0")/.." && pwd)
-project="$root/test"
 frothy=${FROTHY:-$FROTHY_SOURCE_ROOT/build/host/frothy}
 build_dir=$(mktemp -d "${TMPDIR:-/tmp}/frothy-stepper.XXXXXX")
+ln -s "$root" "$build_dir/frothy-stepper"
+project="$build_dir/frothy-stepper/test"
 
 cleanup() {
-  rm -rf "$build_dir" "$project/.frothy"
+  rm -rf "$project/.frothy" "$build_dir"
 }
 trap cleanup EXIT
 

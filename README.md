@@ -4,7 +4,7 @@ Frothy Stepper adds smooth, accelerated motion to
 [Frothy](https://frothy.dev) projects that use a step-and-direction motor
 driver such as an A4988 or DRV8825.
 
-**Current version:** 0.1.0
+**Current version:** 0.1.2
 
 **Status:** Experimental
 
@@ -21,8 +21,9 @@ injury.
 - A suitable external motor power supply.
 - A 32-bit Frothy profile with cells and GPIO support.
 
-The library currently declares support for `esp32_devkit_v1` and
-`seeed_xiao_esp32s3`. The `host` target is included for testing.
+The library currently declares support for `esp32_devkit_v1`,
+`seeed_xiao_esp32c6`, and `seeed_xiao_esp32s3`. The `host` target is included
+for testing.
 
 This is a Frothy library with a C component. Its native words must be compiled
 into the firmware, so adding the dependency requires rebuilding and flashing
@@ -45,7 +46,7 @@ frothy build
 frothy flash esp32_devkit_v1 --port /dev/cu.usbserial-0001
 ```
 
-Version 0.1.0 contains only native words, so there is no additional Frothy
+This release contains only native words, so there is no additional Frothy
 library source to install after flashing.
 
 ## Wire the driver
