@@ -33,7 +33,7 @@ numbers() {
 # move at acceleration 100. Each row is position, signed speed, interval us.
 trace_output=$(
   "$binary" <<'EOF'
-m is cells(16)
+m is cells: 16
 stepper.init: m, 2, 3
 stepper.set-max-speed: m, 1000
 stepper.set-acceleration: m, 100
@@ -41,52 +41,52 @@ stepper.move-to: m, 10
 stepper.current-position: m
 stepper.speed: m
 m[5]
-ms: 100
+wait: 100
 stepper.run: m
 stepper.current-position: m
 stepper.speed: m
 m[5]
-ms: 100
+wait: 100
 stepper.run: m
 stepper.current-position: m
 stepper.speed: m
 m[5]
-ms: 100
+wait: 100
 stepper.run: m
 stepper.current-position: m
 stepper.speed: m
 m[5]
-ms: 100
+wait: 100
 stepper.run: m
 stepper.current-position: m
 stepper.speed: m
 m[5]
-ms: 100
+wait: 100
 stepper.run: m
 stepper.current-position: m
 stepper.speed: m
 m[5]
-ms: 100
+wait: 100
 stepper.run: m
 stepper.current-position: m
 stepper.speed: m
 m[5]
-ms: 100
+wait: 100
 stepper.run: m
 stepper.current-position: m
 stepper.speed: m
 m[5]
-ms: 100
+wait: 100
 stepper.run: m
 stepper.current-position: m
 stepper.speed: m
 m[5]
-ms: 100
+wait: 100
 stepper.run: m
 stepper.current-position: m
 stepper.speed: m
 m[5]
-ms: 100
+wait: 100
 stepper.run: m
 stepper.current-position: m
 stepper.speed: m
@@ -148,16 +148,16 @@ fi
 # idle step pin. This also exercises a generated native name ending in `?`.
 reverse_output=$(
   "$binary" <<'EOF'
-m is cells(16)
+m is cells: 16
 stepper.init: m, 2, 3
 stepper.set-max-speed: m, 1000
 stepper.set-acceleration: m, 100
 stepper.move-to: m, 100
-repeat 4 [ ms: 100 ; stepper.run: m ]
+repeat 4 [ wait: 100 ; stepper.run: m ]
 stepper.current-position: m
 stepper.speed: m
 stepper.move-to: m, -3
-repeat 40 [ ms: 100 ; stepper.run: m ]
+repeat 40 [ wait: 100 ; stepper.run: m ]
 stepper.current-position: m
 stepper.target-position: m
 stepper.distance-to-go: m
@@ -183,12 +183,12 @@ fi
 # Pin the accepted numeric envelope and complete a move without a range error.
 boundary_output=$(
   "$binary" <<'EOF'
-m is cells(16)
+m is cells: 16
 stepper.init: m, 8, 9
 stepper.set-max-speed: m, 46340
 stepper.set-acceleration: m, 1
 stepper.move-to: m, 5
-repeat 10 [ ms: 1000 ; stepper.run: m ]
+repeat 10 [ wait: 1000 ; stepper.run: m ]
 stepper.current-position: m
 stepper.target-position: m
 stepper.distance-to-go: m
@@ -212,15 +212,15 @@ fi
 # four microseconds, so the second due step lands at wrapped time 184.
 wrap_output=$(
   "$binary" <<'EOF'
-m is cells(16)
+m is cells: 16
 stepper.init: m, 2, 3
 stepper.set-max-speed: m, 1000
 stepper.set-speed: m, 1000
-repeat 16 [ ms: 65535 ]
-ms: 25181
+repeat 16 [ wait: 65535 ]
+wait: 25181
 stepper.run-speed: m
 micros:
-ms: 1
+wait: 1
 stepper.run-speed: m
 micros:
 stepper.current-position: m
@@ -237,7 +237,7 @@ fi
 
 uninitialized_output=$(
   "$binary" <<'EOF'
-raw is cells(16)
+raw is cells: 16
 stepper.run-speed: raw
 EOF
 )

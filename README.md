@@ -4,7 +4,7 @@ Frothy Stepper adds smooth, accelerated motion to
 [Frothy](https://frothy.dev) projects that use a step-and-direction motor
 driver such as an A4988 or DRV8825.
 
-**Current version:** 0.1.2
+**Current version:** 0.1.3
 
 **Status:** Experimental
 
@@ -61,11 +61,11 @@ for current limiting, decoupling, and power sequencing.
 
 ## Move a motor
 
-Each motor uses one caller-owned `cells(16)`. Initialize it with the STEP and
+Each motor uses one caller-owned `cells: 16`. Initialize it with the STEP and
 DIR pins, choose a maximum speed and acceleration, and set a destination:
 
 ```frothy
-motor is cells(16)
+motor is cells: 16
 
 stepper.init: motor, 2, 3
 stepper.set-max-speed: motor, 1200
@@ -111,7 +111,7 @@ forever [
 
 | Word | Arguments | Result | What it does |
 |---|---|---|---|
-| `stepper.init` | motor, step pin, direction pin | nil | Initialize one `cells(16)` and both output pins. |
+| `stepper.init` | motor, step pin, direction pin | nil | Initialize one `cells: 16` and both output pins. |
 | `stepper.set-max-speed` | motor, steps/s | nil | Set the positive speed limit. |
 | `stepper.set-acceleration` | motor, steps/s² | nil | Set positive acceleration. |
 | `stepper.set-speed` | motor, signed steps/s | nil | Set a constant speed, clamped to the speed limit. |
@@ -127,7 +127,7 @@ forever [
 | `stepper.speed` | motor | int | Read the signed current speed. |
 | `stepper.running?` | motor | bool | Report whether motion remains. |
 
-Passing anything other than `cells(16)`, using invalid settings, or passing
+Passing anything other than `cells: 16`, using invalid settings, or passing
 uninitialized or visibly damaged state produces a Frothy error before a step
 is emitted.
 
@@ -149,7 +149,7 @@ load, supply voltage, and wiring.
 ## Inspecting motor state
 
 The extension keeps no hidden motor allocation or mutable C state. Everything
-for a motor lives in its `cells(16)`, so experienced users can inspect it
+for a motor lives in its `cells: 16`, so experienced users can inspect it
 directly. Normal programs should use the public words above instead of writing
 these cells.
 
