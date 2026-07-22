@@ -4,7 +4,7 @@ Frothy Stepper adds smooth, accelerated motion to
 [Frothy](https://frothy.dev) projects that use a step-and-direction motor
 driver such as an A4988 or DRV8825.
 
-**Current version:** 0.1.3
+**Current version:** 0.1.4
 
 **Status:** Experimental
 
